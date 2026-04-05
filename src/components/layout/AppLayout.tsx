@@ -1,18 +1,20 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { Bell, Search, User } from "lucide-react";
-import { alerts } from "@/data/mockData";
+import { useActiveThreats } from "@/hooks/useSupabaseData";
+import { useAuth } from "@/hooks/useAuth";
 import { Outlet } from "react-router-dom";
 
-const newAlertCount = alerts.filter((a) => a.status === "new").length;
-
 export function AppLayout() {
+  const { data: activeThreats = [] } = useActiveThreats();
+  const { user } = useAuth();
+  const newAlertCount = activeThreats.filter((a) => a.status === "new").length;
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          {/* Top navbar */}
           <header className="h-14 flex items-center justify-between border-b border-border/30 bg-card/40 backdrop-blur-sm px-4 sticky top-0 z-30">
             <div className="flex items-center gap-3">
               <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
@@ -44,13 +46,12 @@ export function AppLayout() {
                 </div>
                 <div className="hidden md:block">
                   <p className="text-[11px] text-foreground font-medium">SOC Analyst</p>
-                  <p className="text-[9px] text-muted-foreground">analyst@secureops.io</p>
+                  <p className="text-[9px] text-muted-foreground">{user?.email ?? ""}</p>
                 </div>
               </div>
             </div>
           </header>
 
-          {/* Main content */}
           <main className="flex-1 overflow-auto p-4 md:p-6">
             <Outlet />
           </main>
