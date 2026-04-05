@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { alerts, type Alert } from "@/data/mockData";
+import { useAlerts, useBlockIP, type Alert } from "@/hooks/useSupabaseData";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Search, Filter, Eye, X, Clock, MapPin, User, Activity, MessageSquare } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const severityVariant: Record<string, string> = {
   critical: "bg-critical/15 text-critical border-critical/30",
@@ -30,15 +31,29 @@ function timeAgo(iso: string) {
 }
 
 export default function AlertsPage() {
+  const { data: alerts = [], isLoading } = useAlerts();
   const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
   const [filter, setFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
+  const blockIP = useBlockIP();
+  const { toast } = useToast();
 
   const filtered = alerts.filter((a) => {
     if (filter !== "all" && a.severity !== filter) return false;
     if (search && !a.title.toLowerCase().includes(search.toLowerCase()) && !a.ip.includes(search)) return false;
     return true;
   });
+
+  const handleBlockIP = (alert: Alert) => {
+    blockIP.mutate(
+      { ip: alert.ip, reason: `Blocked: ${alert.attack_type}`, alertId: alert.id },
+      { onSuccess: () => toast({ title: "IP Blocked", description: `${alert.ip} has been blocked.` }) }
+    );
+  };
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-64 text-muted-foreground text-sm animate-pulse">Loading alerts...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -51,7 +66,6 @@ export default function AlertsPage() {
         </div>
       </div>
 
-      {/* Filters */}
       <div className="flex items-center gap-3 flex-wrap">
         <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-1.5">
           <Search className="h-3.5 w-3.5 text-muted-foreground" />
@@ -80,7 +94,6 @@ export default function AlertsPage() {
       </div>
 
       <div className="flex gap-4">
-        {/* Alert list */}
         <div className={`flex-1 space-y-2 ${selectedAlert ? "max-w-[55%]" : ""}`}>
           {filtered.map((alert, i) => (
             <motion.div
@@ -102,7 +115,7 @@ export default function AlertsPage() {
                     <Badge className={`${statusVariant[alert.status]} text-[8px] px-1.5 py-0`}>
                       {alert.status.replace("_", " ").toUpperCase()}
                     </Badge>
-                    <span className="text-[9px] text-muted-foreground">{alert.attackType}</span>
+                    <span className="text-[9px] text-muted-foreground">{alert.attack_type}</span>
                   </div>
                   <p className="text-xs font-medium text-foreground truncate">{alert.title}</p>
                   <div className="flex items-center gap-3 mt-1.5">
@@ -110,7 +123,7 @@ export default function AlertsPage() {
                     <span className="text-[10px] text-muted-foreground">{alert.country}</span>
                     <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                       <Clock className="h-2.5 w-2.5" />
-                      {timeAgo(alert.lastSeen)}
+                      {timeAgo(alert.last_seen)}
                     </span>
                   </div>
                 </div>
@@ -123,7 +136,6 @@ export default function AlertsPage() {
           ))}
         </div>
 
-        {/* Investigation panel */}
         <AnimatePresence>
           {selectedAlert && (
             <motion.div
@@ -140,7 +152,6 @@ export default function AlertsPage() {
               </div>
 
               <div className="space-y-4">
-                {/* Header */}
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <Badge className={`${severityVariant[selectedAlert.severity]} text-[9px]`}>
@@ -156,11 +167,10 @@ export default function AlertsPage() {
 
                 <div className="neon-line" />
 
-                {/* Details */}
                 <div className="grid grid-cols-2 gap-3">
                   {[
-                    { icon: Activity, label: "Attack Type", value: selectedAlert.attackType },
-                    { icon: User, label: "Username", value: selectedAlert.username },
+                    { icon: Activity, label: "Attack Type", value: selectedAlert.attack_type },
+                    { icon: User, label: "Username", value: selectedAlert.username ?? "N/A" },
                     { icon: MapPin, label: "Location", value: `${selectedAlert.city}, ${selectedAlert.country}` },
                     { icon: Eye, label: "ISP", value: selectedAlert.isp || "Unknown" },
                   ].map((item) => (
@@ -177,16 +187,15 @@ export default function AlertsPage() {
                 <div className="bg-muted/30 rounded-lg p-2.5">
                   <p className="text-[9px] text-muted-foreground uppercase tracking-wider mb-1">Attacker IP</p>
                   <p className="text-sm font-mono font-bold text-foreground">{selectedAlert.ip}</p>
-                  <p className="text-[10px] text-muted-foreground mt-1">Hit Count: {selectedAlert.hitCount} | Score: {selectedAlert.score}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">Hit Count: {selectedAlert.hit_count} | Score: {selectedAlert.score}</p>
                 </div>
 
-                {/* Timeline */}
                 <div>
                   <h4 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Timeline</h4>
                   <div className="space-y-2">
                     {[
-                      { time: selectedAlert.firstSeen, label: "First seen", color: "bg-info" },
-                      { time: selectedAlert.lastSeen, label: "Last seen", color: "bg-critical" },
+                      { time: selectedAlert.first_seen, label: "First seen", color: "bg-info" },
+                      { time: selectedAlert.last_seen, label: "Last seen", color: "bg-critical" },
                     ].map((t) => (
                       <div key={t.label} className="flex items-center gap-2">
                         <div className={`h-2 w-2 rounded-full ${t.color}`} />
@@ -201,12 +210,16 @@ export default function AlertsPage() {
 
                 <div className="neon-line" />
 
-                {/* Actions */}
                 <div className="flex flex-wrap gap-2">
                   <Button size="sm" className="text-[10px] h-7 bg-primary/20 text-primary hover:bg-primary/30 border border-primary/30">
                     <Eye className="h-3 w-3 mr-1" /> Investigate
                   </Button>
-                  <Button size="sm" className="text-[10px] h-7 bg-critical/20 text-critical hover:bg-critical/30 border border-critical/30">
+                  <Button 
+                    size="sm" 
+                    className="text-[10px] h-7 bg-critical/20 text-critical hover:bg-critical/30 border border-critical/30"
+                    onClick={() => handleBlockIP(selectedAlert)}
+                    disabled={blockIP.isPending}
+                  >
                     Block IP
                   </Button>
                   <Button size="sm" className="text-[10px] h-7 bg-muted text-muted-foreground hover:bg-muted/80 border border-border">
@@ -214,7 +227,6 @@ export default function AlertsPage() {
                   </Button>
                 </div>
 
-                {/* Comment section */}
                 <div>
                   <h4 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1">
                     <MessageSquare className="h-3 w-3" /> Analyst Notes

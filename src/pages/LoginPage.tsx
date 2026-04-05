@@ -4,26 +4,43 @@ import { Shield, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("analyst@secureops.io");
-  const [password, setPassword] = useState("demo1234");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
   const navigate = useNavigate();
+  const { signIn, signUp } = useAuth();
+  const { toast } = useToast();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      localStorage.setItem("secureops_auth", "true");
+    
+    const { error } = isSignUp 
+      ? await signUp(email, password)
+      : await signIn(email, password);
+
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      setLoading(false);
+      return;
+    }
+
+    if (isSignUp) {
+      toast({ title: "Success", description: "Check your email to confirm your account." });
+      setLoading(false);
+    } else {
       navigate("/");
-    }, 800);
+    }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      {/* Background effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary/5 rounded-full blur-3xl" />
@@ -42,7 +59,7 @@ export default function LoginPage() {
           <p className="text-[11px] text-muted-foreground mt-1">Login Attack Monitoring Dashboard</p>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1.5 block">Email</label>
             <Input
@@ -50,6 +67,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="bg-muted/50 border-border/30 text-xs h-10"
+              required
             />
           </div>
           <div>
@@ -60,6 +78,8 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="bg-muted/50 border-border/30 text-xs h-10 pr-10"
+                required
+                minLength={6}
               />
               <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                 {showPass ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
@@ -67,13 +87,16 @@ export default function LoginPage() {
             </div>
           </div>
           <Button type="submit" disabled={loading} className="w-full h-10 text-xs bg-primary text-primary-foreground hover:bg-primary/90">
-            {loading ? "Authenticating..." : "Sign In"}
+            {loading ? "Processing..." : isSignUp ? "Sign Up" : "Sign In"}
           </Button>
         </form>
 
-        <p className="text-[9px] text-muted-foreground text-center mt-6">
-          Demo credentials pre-filled. Click Sign In to continue.
-        </p>
+        <button
+          onClick={() => setIsSignUp(!isSignUp)}
+          className="text-[10px] text-muted-foreground hover:text-primary text-center mt-4 w-full block transition-colors"
+        >
+          {isSignUp ? "Already have an account? Sign In" : "Don't have an account? Sign Up"}
+        </button>
       </motion.div>
     </div>
   );

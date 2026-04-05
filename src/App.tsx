@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { useAuth } from "@/hooks/useAuth";
 import Dashboard from "@/pages/Dashboard";
 import AlertsPage from "@/pages/AlertsPage";
 import ThreatMapPage from "@/pages/ThreatMapPage";
@@ -16,8 +17,24 @@ import NotFound from "@/pages/NotFound";
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const isAuth = localStorage.getItem("secureops_auth") === "true";
-  return isAuth ? <>{children}</> : <Navigate to="/login" replace />;
+  const { session, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-pulse text-primary text-sm">Loading...</div>
+      </div>
+    );
+  }
+  
+  return session ? <>{children}</> : <Navigate to="/login" replace />;
+}
+
+function AuthRoute({ children }: { children: React.ReactNode }) {
+  const { session, loading } = useAuth();
+  
+  if (loading) return null;
+  return session ? <Navigate to="/" replace /> : <>{children}</>;
 }
 
 const App = () => (
@@ -27,7 +44,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/login" element={<LoginPage />} />
+          <Route path="/login" element={<AuthRoute><LoginPage /></AuthRoute>} />
           <Route
             element={
               <ProtectedRoute>
