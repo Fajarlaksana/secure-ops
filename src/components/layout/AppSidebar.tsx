@@ -1,5 +1,7 @@
-import { Shield, LayoutDashboard, AlertTriangle, Globe, Lock, Settings, Activity } from "lucide-react";
+import { Shield, LayoutDashboard, AlertTriangle, Globe, Lock, Settings, Activity, LogOut } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -24,6 +26,26 @@ const systemItems = [
   { title: "Detection Rules", url: "/rules", icon: Activity },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
+
+function LogoutButton() {
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
+  
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/login");
+  };
+
+  return (
+    <button
+      onClick={handleLogout}
+      className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-[10px] text-muted-foreground hover:bg-critical/10 hover:text-critical transition-colors"
+    >
+      <LogOut className="h-3.5 w-3.5" />
+      Sign Out
+    </button>
+  );
+}
 
 export function AppSidebar() {
   const { state } = useSidebar();
@@ -98,17 +120,17 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Status indicator */}
+        {/* Status & Logout */}
         {!collapsed && (
-          <div className="mt-auto p-4">
+          <div className="mt-auto p-4 space-y-2">
             <div className="glass-card p-3 rounded-lg">
               <div className="flex items-center gap-2 mb-1">
                 <div className="h-2 w-2 rounded-full bg-success animate-pulse-glow" />
                 <span className="text-[10px] text-muted-foreground">System Status</span>
               </div>
               <p className="text-[10px] text-success font-medium">All Systems Online</p>
-              <p className="text-[10px] text-muted-foreground mt-1">Wazuh: Connected</p>
             </div>
+            <LogoutButton />
           </div>
         )}
       </SidebarContent>

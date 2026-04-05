@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
-import { activeThreats } from "@/data/mockData";
+import { useActiveThreats } from "@/hooks/useSupabaseData";
 import { AlertTriangle, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
-const severityVariant = {
+const severityVariant: Record<string, string> = {
   critical: "bg-critical/15 text-critical border-critical/30",
   high: "bg-warning/15 text-warning border-warning/30",
   medium: "bg-warning/10 text-warning/80 border-warning/20",
@@ -20,6 +20,8 @@ function timeAgo(iso: string) {
 }
 
 export function ActiveThreats() {
+  const { data: activeThreats = [], isLoading } = useActiveThreats();
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -31,12 +33,14 @@ export function ActiveThreats() {
         <AlertTriangle className="h-4 w-4 text-critical" />
         <h3 className="text-xs font-semibold text-foreground">Active Threats</h3>
         <Badge className="bg-critical/15 text-critical border-critical/30 text-[9px] ml-auto">
-          {activeThreats.length} Active
+          {isLoading ? "..." : `${activeThreats.length} Active`}
         </Badge>
       </div>
 
       <div className="space-y-2 max-h-[320px] overflow-y-auto">
-        {activeThreats.map((threat, i) => (
+        {isLoading ? (
+          <div className="text-muted-foreground text-xs animate-pulse text-center py-8">Loading...</div>
+        ) : activeThreats.map((threat, i) => (
           <motion.div
             key={threat.id}
             initial={{ opacity: 0, x: -10 }}
@@ -59,7 +63,7 @@ export function ActiveThreats() {
               </Badge>
               <div className="flex items-center gap-1 text-[9px] text-muted-foreground">
                 <Clock className="h-2.5 w-2.5" />
-                {timeAgo(threat.lastSeen)}
+                {timeAgo(threat.last_seen)}
               </div>
             </div>
           </motion.div>
