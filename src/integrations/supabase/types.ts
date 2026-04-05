@@ -14,7 +14,215 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      alerts: {
+        Row: {
+          assigned_to: string | null
+          attack_type: string
+          city: string | null
+          country: string | null
+          created_at: string
+          description: string | null
+          first_seen: string
+          hit_count: number | null
+          id: string
+          ip: string
+          isp: string | null
+          last_seen: string
+          lat: number | null
+          lon: number | null
+          rule_name: string
+          score: number | null
+          severity: Database["public"]["Enums"]["alert_severity"]
+          status: Database["public"]["Enums"]["alert_status"]
+          title: string
+          updated_at: string
+          username: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          attack_type: string
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          first_seen?: string
+          hit_count?: number | null
+          id?: string
+          ip: string
+          isp?: string | null
+          last_seen?: string
+          lat?: number | null
+          lon?: number | null
+          rule_name: string
+          score?: number | null
+          severity?: Database["public"]["Enums"]["alert_severity"]
+          status?: Database["public"]["Enums"]["alert_status"]
+          title: string
+          updated_at?: string
+          username?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          attack_type?: string
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          first_seen?: string
+          hit_count?: number | null
+          id?: string
+          ip?: string
+          isp?: string | null
+          last_seen?: string
+          lat?: number | null
+          lon?: number | null
+          rule_name?: string
+          score?: number | null
+          severity?: Database["public"]["Enums"]["alert_severity"]
+          status?: Database["public"]["Enums"]["alert_status"]
+          title?: string
+          updated_at?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
+      blocked_ips: {
+        Row: {
+          alert_id: string | null
+          blocked_at: string
+          blocked_by: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          ip: string
+          is_active: boolean
+          reason: string | null
+        }
+        Insert: {
+          alert_id?: string | null
+          blocked_at?: string
+          blocked_by?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          ip: string
+          is_active?: boolean
+          reason?: string | null
+        }
+        Update: {
+          alert_id?: string | null
+          blocked_at?: string
+          blocked_by?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          ip?: string
+          is_active?: boolean
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blocked_ips_alert_id_fkey"
+            columns: ["alert_id"]
+            isOneToOne: false
+            referencedRelation: "alerts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      correlation_rules: {
+        Row: {
+          config: Json | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          severity: Database["public"]["Enums"]["alert_severity"]
+          threshold: number
+          updated_at: string
+          window_secs: number
+        }
+        Insert: {
+          config?: Json | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          severity?: Database["public"]["Enums"]["alert_severity"]
+          threshold?: number
+          updated_at?: string
+          window_secs?: number
+        }
+        Update: {
+          config?: Json | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          severity?: Database["public"]["Enums"]["alert_severity"]
+          threshold?: number
+          updated_at?: string
+          window_secs?: number
+        }
+        Relationships: []
+      }
+      login_events: {
+        Row: {
+          city: string | null
+          country: string | null
+          created_at: string
+          id: string
+          ip: string
+          lat: number | null
+          lon: number | null
+          raw_data: Json | null
+          source: string
+          success: boolean
+          timestamp: string
+          user_agent: string | null
+          username: string
+          wazuh_agent_id: string | null
+          wazuh_rule_id: number | null
+        }
+        Insert: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          ip: string
+          lat?: number | null
+          lon?: number | null
+          raw_data?: Json | null
+          source: string
+          success?: boolean
+          timestamp?: string
+          user_agent?: string | null
+          username: string
+          wazuh_agent_id?: string | null
+          wazuh_rule_id?: number | null
+        }
+        Update: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          ip?: string
+          lat?: number | null
+          lon?: number | null
+          raw_data?: Json | null
+          source?: string
+          success?: boolean
+          timestamp?: string
+          user_agent?: string | null
+          username?: string
+          wazuh_agent_id?: string | null
+          wazuh_rule_id?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +231,13 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      alert_severity: "low" | "medium" | "high" | "critical"
+      alert_status:
+        | "new"
+        | "acknowledged"
+        | "investigating"
+        | "resolved"
+        | "false_positive"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +364,15 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      alert_severity: ["low", "medium", "high", "critical"],
+      alert_status: [
+        "new",
+        "acknowledged",
+        "investigating",
+        "resolved",
+        "false_positive",
+      ],
+    },
   },
 } as const
