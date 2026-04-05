@@ -27,6 +27,26 @@ const systemItems = [
   { title: "Settings", url: "/settings", icon: Settings },
 ];
 
+function LogoutButton() {
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
+  
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/login");
+  };
+
+  return (
+    <button
+      onClick={handleLogout}
+      className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-[10px] text-muted-foreground hover:bg-critical/10 hover:text-critical transition-colors"
+    >
+      <LogOut className="h-3.5 w-3.5" />
+      Sign Out
+    </button>
+  );
+}
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
