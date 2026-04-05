@@ -1,5 +1,7 @@
-import { Shield, LayoutDashboard, AlertTriangle, Globe, Lock, Settings, Activity } from "lucide-react";
+import { Shield, LayoutDashboard, AlertTriangle, Globe, Lock, Settings, Activity, LogOut } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import {
   Sidebar,
